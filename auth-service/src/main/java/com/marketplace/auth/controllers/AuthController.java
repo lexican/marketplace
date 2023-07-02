@@ -15,7 +15,7 @@ import com.marketplace.auth.models.ERole;
 import com.marketplace.auth.models.Role;
 import com.marketplace.auth.models.User;
 import com.marketplace.auth.payload.request.SignupRequest;
-import com.marketplace.auth.payload.request.response.MessageResponse;
+import com.marketplace.auth.payload.response.MessageResponse;
 import com.marketplace.auth.services.RoleService;
 import com.marketplace.auth.services.UserService;
 

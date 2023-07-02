@@ -1,4 +1,4 @@
-package com.marketplace.auth.payload.request.response;
+package com.marketplace.auth.payload.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
