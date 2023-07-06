@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +18,7 @@ import com.marketplace.auth.exceptions.ObjectNotFoundException;
 import com.marketplace.auth.models.ERole;
 import com.marketplace.auth.models.Role;
 import com.marketplace.auth.models.User;
+import com.marketplace.auth.payload.request.SigninRequest;
 import com.marketplace.auth.payload.request.SignupRequest;
 import com.marketplace.auth.payload.response.AuthenticationResponse;
 import com.marketplace.auth.payload.response.MessageResponse;
@@ -35,6 +39,10 @@ public class AuthController {
 
 	private final JwtService jwtService;
 
+	private final AuthenticationManager authenticationManager;
+
+	private final PasswordEncoder passwordEncoder;
+
 	@PostMapping(value = "/register")
 	public ResponseEntity<Object> register(@Valid @RequestBody SignupRequest signUpRequest) {
 
@@ -47,7 +55,7 @@ public class AuthController {
 		}
 
 		User user = User.builder().username(signUpRequest.getUsername()).email(signUpRequest.getEmail())
-				.password(signUpRequest.getPassword()).build();
+				.password(passwordEncoder.encode(signUpRequest.getPassword())).build();
 
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
@@ -72,13 +80,22 @@ public class AuthController {
 		}
 
 		user.setRoles(roles);
+		
 		User savedUser = userService.save(user);
 
 		var jwtToken = jwtService.generateToken(new HashMap<>(), savedUser);
-		
-		System.out.println("User Token : " + jwtToken);
 
 		return ResponseEntity.ok(new AuthenticationResponse("User registered successfully!", jwtToken));
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody SigninRequest signinrequest) {
+		authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(signinrequest.getEmail(), signinrequest.getPassword()));
+		var user = userService.findByEmail(signinrequest.getEmail()).orElseThrow();
+		var jwtToken = jwtService.generateToken(new HashMap<>(), user);
+		return ResponseEntity
+				.ok(AuthenticationResponse.builder().token(jwtToken).message("Login successfully!").build());
 	}
 
 }

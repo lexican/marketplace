@@ -1,6 +1,7 @@
 package com.marketplace.auth.payload.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@Builder
 public class AuthenticationResponse {
 	private String message;
 	private String token;
