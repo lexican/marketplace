@@ -1,42 +1,42 @@
 package com.marketplace.auth.controllers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.marketplace.auth.config.JwtService;
 import com.marketplace.auth.exceptions.ObjectNotFoundException;
 import com.marketplace.auth.models.ERole;
 import com.marketplace.auth.models.Role;
 import com.marketplace.auth.models.User;
 import com.marketplace.auth.payload.request.SignupRequest;
+import com.marketplace.auth.payload.response.AuthenticationResponse;
 import com.marketplace.auth.payload.response.MessageResponse;
 import com.marketplace.auth.services.RoleService;
 import com.marketplace.auth.services.UserService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-	UserService userService;
+	private final UserService userService;
 
-	RoleService roleService;
+	private final RoleService roleService;
 
-	@Autowired
-	public AuthController(UserService userService, RoleService roleService) {
-		this.userService = userService;
-		this.roleService = roleService;
-	}
+	private final JwtService jwtService;
 
 	@PostMapping(value = "/register")
-	public ResponseEntity<MessageResponse> register(@Valid @RequestBody SignupRequest signUpRequest) {
+	public ResponseEntity<Object> register(@Valid @RequestBody SignupRequest signUpRequest) {
 
 		if (userService.existsByUsername(signUpRequest.getUsername())) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
@@ -44,9 +44,10 @@ public class AuthController {
 
 		if (userService.existsByEmail(signUpRequest.getEmail())) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
-		}	
-		
-		User user = User.builder().username(signUpRequest.getUsername()).email(signUpRequest.getEmail()).password(signUpRequest.getPassword()).build();
+		}
+
+		User user = User.builder().username(signUpRequest.getUsername()).email(signUpRequest.getEmail())
+				.password(signUpRequest.getPassword()).build();
 
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
@@ -71,9 +72,13 @@ public class AuthController {
 		}
 
 		user.setRoles(roles);
-		userService.save(user);
+		User savedUser = userService.save(user);
 
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		var jwtToken = jwtService.generateToken(new HashMap<>(), savedUser);
+		
+		System.out.println("User Token : " + jwtToken);
+
+		return ResponseEntity.ok(new AuthenticationResponse("User registered successfully!", jwtToken));
 	}
 
 }
