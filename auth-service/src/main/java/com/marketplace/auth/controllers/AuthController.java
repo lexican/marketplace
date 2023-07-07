@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -80,7 +81,7 @@ public class AuthController {
 		}
 
 		user.setRoles(roles);
-		
+
 		User savedUser = userService.save(user);
 
 		var jwtToken = jwtService.generateToken(new HashMap<>(), savedUser);
@@ -89,6 +90,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
+	@Transactional
 	public ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody SigninRequest signinrequest) {
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(signinrequest.getEmail(), signinrequest.getPassword()));

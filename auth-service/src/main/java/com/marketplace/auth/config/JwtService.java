@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,10 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-	private final String SECRET_KEY = "1D6B5EB0152CCA8AAEEF8248A171539F43E95E8077F792EF9EAA8B953022D0GF";
-	private final int jwtExpiration = 1000 * 64 * 60;
+	@Value("${marketplace.app.secret-key}")
+	private String secretKey;
+	@Value("${marketplace.app.expiration}")
+	private long jwtExpiration;
 
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -58,7 +61,7 @@ public class JwtService {
 	}
 
 	private Key getSignInKey() {
-		byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 
