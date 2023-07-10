@@ -2,16 +2,24 @@ package com.marketplace.auth.controllers;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.marketplace.auth.config.JwtService;
@@ -23,6 +31,7 @@ import com.marketplace.auth.payload.request.SigninRequest;
 import com.marketplace.auth.payload.request.SignupRequest;
 import com.marketplace.auth.payload.response.AuthenticationResponse;
 import com.marketplace.auth.payload.response.MessageResponse;
+import com.marketplace.auth.payload.response.VerifyTokenResponse;
 import com.marketplace.auth.services.RoleService;
 import com.marketplace.auth.services.UserService;
 
@@ -43,6 +52,8 @@ public class AuthController {
 	private final AuthenticationManager authenticationManager;
 
 	private final PasswordEncoder passwordEncoder;
+
+	private final UserDetailsService userDetailsService;
 
 	@PostMapping(value = "/register")
 	public ResponseEntity<Object> register(@Valid @RequestBody SignupRequest signUpRequest) {
@@ -98,6 +109,31 @@ public class AuthController {
 		var jwtToken = jwtService.generateToken(new HashMap<>(), user);
 		return ResponseEntity
 				.ok(AuthenticationResponse.builder().token(jwtToken).message("Login successfully!").build());
+	}
+
+	@GetMapping("/verifyToken")
+	public ResponseEntity<VerifyTokenResponse> verifyToken(@RequestParam("token") String token) {
+
+		final String userEmail = jwtService.extractUsername(token);
+
+		System.out.println("userEmail : " + userEmail);
+
+		if (userEmail != null) {
+
+			UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+			List<String> roles = userDetails.getAuthorities().stream().map(e -> e.getAuthority())
+					.collect(Collectors.toList());
+
+			if (jwtService.isTokenValid(token, userDetails)) {
+
+				return ResponseEntity
+						.ok(VerifyTokenResponse.builder().message("Valid Token").email(userEmail).roles(roles).build());
+			}
+
+		}
+		return ResponseEntity.badRequest()
+				.body(VerifyTokenResponse.builder().message("Invalid Token").email("").build());
 	}
 
 }
