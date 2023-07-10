@@ -9,11 +9,9 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,7 +109,7 @@ public class AuthController {
 				.ok(AuthenticationResponse.builder().token(jwtToken).message("Login successfully!").build());
 	}
 
-	@GetMapping("/verifyToken")
+	@GetMapping("/validate")
 	public ResponseEntity<VerifyTokenResponse> verifyToken(@RequestParam("token") String token) {
 
 		final String userEmail = jwtService.extractUsername(token);
