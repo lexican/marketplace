@@ -7,8 +7,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.marketplace.auth.exceptions.CustomAuthenticationFailureHandler;
+import com.marketplace.auth.exceptions.UserAuthenticationErrorHandler;
+import com.marketplace.auth.exceptions.UserForbiddenErrorHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,16 +27,29 @@ public class SecurityConfiguration {
 	private final JwtAuthenticationFilter jwtAuthFilter;
 	private final AuthenticationProvider authenticationProvider;
 
+	@SuppressWarnings("removal")
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(
-						authorize -> authorize.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated())
+				.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/auth/login").permitAll()
+						.requestMatchers("/api/auth/register").permitAll().requestMatchers("/api/auth/validate")
+						.permitAll().anyRequest().authenticated())
+
 				.formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider)
-				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(userAuthenticationErrorHandler())
+						.accessDeniedHandler(new UserForbiddenErrorHandler()));
 
 		return http.build();
 	}
+
+	@Bean
+	public AuthenticationEntryPoint userAuthenticationErrorHandler() {
+		UserAuthenticationErrorHandler userAuthenticationErrorHandler = new UserAuthenticationErrorHandler();
+		userAuthenticationErrorHandler.setRealmName("Basic Authentication");
+		return userAuthenticationErrorHandler;
+	}
+
 }

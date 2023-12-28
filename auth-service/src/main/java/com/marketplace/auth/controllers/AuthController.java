@@ -3,6 +3,7 @@ package com.marketplace.auth.controllers;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -132,6 +134,20 @@ public class AuthController {
 		}
 		return ResponseEntity.badRequest()
 				.body(VerifyTokenResponse.builder().message("Invalid Token").email("").build());
+	}
+	
+	@GetMapping(value = "/users")
+	public ResponseEntity<List<User>> getAllUsers() {
+		return ResponseEntity.ok(userService.getAllUsers());
+	}
+
+	@GetMapping(value = "/user/{id}")
+	public ResponseEntity<Object> getUserById(@PathVariable("id") Long id) {
+		Optional<User> user = userService.findById(id);
+		if (user.isPresent()) {
+			return ResponseEntity.ok(user);
+		}
+		return ResponseEntity.badRequest().body(new MessageResponse("User does not exist"));
 	}
 
 }
