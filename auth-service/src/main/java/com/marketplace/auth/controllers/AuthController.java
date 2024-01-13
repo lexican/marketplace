@@ -135,7 +135,7 @@ public class AuthController {
 		return ResponseEntity.badRequest()
 				.body(VerifyTokenResponse.builder().message("Invalid Token").email("").build());
 	}
-	
+
 	@GetMapping(value = "/users")
 	public ResponseEntity<List<User>> getAllUsers() {
 		return ResponseEntity.ok(userService.getAllUsers());

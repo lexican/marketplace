@@ -15,13 +15,4 @@ public class GatewayApplication {
 		SpringApplication.run(GatewayApplication.class, args);
 	}
 
-	@Bean
-	public RouteLocator routerBuilder(RouteLocatorBuilder routeLocatorBuilder) {
-		return routeLocatorBuilder.routes()
-				.route("auth-service", r -> r.path("/auth-service/**").uri("http://localhost:8082/"))
-				// .route("Microservice2", r ->
-				// r.path("/serviceB/**").uri("http://localhost:8082/"))
-				.build();
-	}
-
 }

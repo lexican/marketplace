@@ -14,8 +14,6 @@ spring:
           uri: 'lb://PRODUCT-SERVICE'
           predicates:
             - Path=/product/**
-          filters:
-           - AuthenticationFilter
   application:
     name: GATEWAY
   eureka:

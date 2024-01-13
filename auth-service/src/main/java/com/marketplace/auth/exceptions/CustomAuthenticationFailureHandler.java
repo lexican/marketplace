@@ -25,13 +25,12 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
 		response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-		
-		
+		response.setCharacterEncoding("UTF-8");
+
 		Map<String, Object> data = new HashMap<>();
 		data.put("timestamp", Calendar.getInstance().getTime());
 		data.put("exception", exception.getMessage());
-		
+
 		System.out.println("Error message : " + data.toString());
 
 		response.getOutputStream().println(objectMapper.writeValueAsString(data));
