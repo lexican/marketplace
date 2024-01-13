@@ -5,17 +5,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/product")
-public class ProductController {
-
+@RequestMapping("/e-comm")
+public class ProtectedProductController {
 	@GetMapping("/hello")
 	public String sayHello() {
-		return "Product Service";
-	}
-	
-	@GetMapping("/protected")
-	public String sayHello2() {
 		return "Protected Product Service";
 	}
-
 }
