@@ -1,6 +1,7 @@
 package com.marketplace.product.config;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,6 @@ import com.marketplace.product.payload.response.VerifyTokenResponse;
 
 import lombok.RequiredArgsConstructor;
 
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,56 +29,82 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-private final JwtService jwtService;
-private final RestTemplate restTemplate;
+	private final JwtService jwtService;
+	private final RestTemplate restTemplate;
 
 	@Value("${app.auth.url}")
 	private String authUrl;
-	
+
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull FilterChain filterChain) throws ServletException, IOException {
-		final String authHeader = request.getHeader("Authorization");
-		
-		final String jwt;
-		final String userEmail;
+		//
+		String authHeader = request.getHeader("Authorization");
+		String email = request.getHeader("email");
+		String roles = request.getHeader("roles");
 
+		// Return if authorization token is not present
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
 
-		jwt = authHeader.substring(7);
-		userEmail = jwtService.extractUsername(jwt);
-		
-		//&& SecurityContextHolder.getContext().getAuthentication().toString() == null
+		final String jwt = authHeader.substring(7);
 
-		if (userEmail != null ) {
-			
-			try {
-				
-				
-				ResponseEntity<VerifyTokenResponse> verifyTokenResponse = restTemplate.getForEntity(authUrl + jwt, VerifyTokenResponse.class);
-				VerifyTokenResponse verifyToken = verifyTokenResponse.getBody();
-				
-				System.out.println("verifyTokenResponse : " + verifyTokenResponse.toString());
-				
-				List<GrantedAuthority> authorities = verifyToken.getRoles().stream()
-						.map(role -> new SimpleGrantedAuthority(role)).collect(Collectors.toList());
-				
-				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(verifyToken.getEmail(), null, authorities);
+		if (email != null && roles != null) {
+			List<String> rolesList = Arrays.asList(roles.split(","));
 
-				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			String userEmail = jwtService.extractUsername(jwt);
 
-				SecurityContextHolder.getContext().setAuthentication(authToken);
-				
-				
-			}catch(Exception e) {
-				System.out.println("Rest Template error : ********************" + e.toString());
+			if (userEmail != null && (email.equals(userEmail))) {
+				System.out.println("email == username");
+				setSecurityContext(email, rolesList, request);
+
+			} else {
+				System.out.println("email != username");
+				filterChain.doFilter(request, response);
+				return;
 			}
 
+		} else {
+			
+
+			String userEmail = jwtService.extractUsername(jwt);
+			
+			
+			System.out.println("Use header :: " + jwt + "userEmail" + userEmail );
+
+			if (userEmail != null) {
+
+				try {
+
+					ResponseEntity<VerifyTokenResponse> verifyTokenResponse = restTemplate.getForEntity(authUrl + jwt,
+							VerifyTokenResponse.class);
+					VerifyTokenResponse verifyToken = verifyTokenResponse.getBody();
+
+					System.out.println("verifyTokenResponse : " + verifyTokenResponse.toString());
+
+					setSecurityContext(verifyToken.getEmail(), verifyToken.getRoles(), request);
+
+				} catch (Exception e) {
+					System.out.println("Rest Template error : ********************" + e.toString());
+				}
+
+			}
 		}
-		
+
 		filterChain.doFilter(request, response);
+	}
+
+	private void setSecurityContext(String userEmail, List<String> roles, HttpServletRequest request) {
+		List<GrantedAuthority> authorities = roles.stream().map(role -> new SimpleGrantedAuthority(role))
+				.collect(Collectors.toList());
+
+		UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userEmail, null,
+				authorities);
+
+		authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+		SecurityContextHolder.getContext().setAuthentication(authToken);
 	}
 }

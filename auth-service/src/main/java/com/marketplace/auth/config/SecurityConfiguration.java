@@ -9,10 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.marketplace.auth.exceptions.CustomAuthenticationFailureHandler;
 import com.marketplace.auth.exceptions.UserAuthenticationErrorHandler;
 import com.marketplace.auth.exceptions.UserForbiddenErrorHandler;
 
@@ -27,7 +25,6 @@ public class SecurityConfiguration {
 	private final JwtAuthenticationFilter jwtAuthFilter;
 	private final AuthenticationProvider authenticationProvider;
 
-	@SuppressWarnings("removal")
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable())
