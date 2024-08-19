@@ -2,6 +2,7 @@ package com.marketplace.product.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,12 +25,11 @@ public class SecurityConfiguration {
 	private final JwtAuthenticationFilter jwtAuthFilter;
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/product/hello").permitAll().anyRequest()
-						.authenticated())
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(authorize -> authorize
+				.requestMatchers(HttpMethod.GET, "/api/product/welcome").permitAll().anyRequest().authenticated()
 
-				.formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
+		).formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
@@ -40,7 +40,7 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	public AuthenticationEntryPoint userAuthenticationErrorHandler() {
+	AuthenticationEntryPoint userAuthenticationErrorHandler() {
 		UserAuthenticationErrorHandler userAuthenticationErrorHandler = new UserAuthenticationErrorHandler();
 		userAuthenticationErrorHandler.setRealmName("Basic Authentication");
 		return userAuthenticationErrorHandler;

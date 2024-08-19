@@ -33,6 +33,7 @@ public class AuthenticationFilter implements GatewayFilter {
 
 
 		if (routerValidator.isSecured.test(request)) {
+			System.out.println("Filter ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Authorization not available");
 			if (this.isAuthMissing(request)) {
 				return this.onError(exchange, HttpStatus.UNAUTHORIZED);
 			}

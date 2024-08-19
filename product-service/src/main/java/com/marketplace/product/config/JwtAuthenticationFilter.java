@@ -1,22 +1,32 @@
 package com.marketplace.product.config;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marketplace.product.exceptions.CustomException;
 import com.marketplace.product.payload.response.VerifyTokenResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -67,12 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			}
 
 		} else {
-			
 
 			String userEmail = jwtService.extractUsername(jwt);
-			
-			
-			System.out.println("Use header :: " + jwt + "userEmail" + userEmail );
+
+			System.out.println("Use header :: " + jwt + "userEmail" + userEmail);
 
 			if (userEmail != null) {
 
@@ -87,7 +95,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					setSecurityContext(verifyToken.getEmail(), verifyToken.getRoles(), request);
 
 				} catch (Exception e) {
-					System.out.println("Rest Template error : ********************" + e.toString());
+
+					ObjectMapper objectMapper = new ObjectMapper();
+					final PrintWriter writer = response.getWriter();
+
+					response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+					response.setContentType("application/json");
+					response.setCharacterEncoding("UTF-8");
+
+					Map<String, Object> data = new HashMap<>();
+					data.put("success", false);
+					data.put("timestamp", Calendar.getInstance().getTime());
+					data.put("error", e.toString());
+
+					writer.println(objectMapper.writeValueAsString(data));
+
+					return;
 				}
 
 			}
@@ -106,5 +129,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
 		SecurityContextHolder.getContext().setAuthentication(authToken);
+	}
+
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new InMemoryUserDetailsManager();
 	}
 }

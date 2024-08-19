@@ -43,7 +43,7 @@ public class Product implements Serializable {
 	@Builder.Default
 	private double productDiscount = 0;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
 

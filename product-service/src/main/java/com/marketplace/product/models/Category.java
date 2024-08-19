@@ -14,11 +14,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
 @Builder
@@ -30,10 +32,14 @@ public class Category implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	final String name;
+	private String name;
+	private String description;
 
 	@Column(name = "created_on")
 	@Builder.Default
 	private Date createdOn = new Date();
 
 }
+
+
+
