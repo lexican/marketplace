@@ -9,4 +9,6 @@ public interface IProductService {
 	List<Product> getProducts();
 
 	Optional<Product> getProductById(Long productId);
+
+	Optional<Product> deleteProductById(Long productId);
 }

@@ -16,5 +16,5 @@ import lombok.Setter;
 public class ApiResponse<T> {
 	boolean success;
 	T data;
-	String error;
+	String message;
 }

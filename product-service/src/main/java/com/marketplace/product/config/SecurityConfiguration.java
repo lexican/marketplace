@@ -26,12 +26,17 @@ public class SecurityConfiguration {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(HttpMethod.GET, "/api/product/welcome").permitAll().anyRequest().authenticated()
+		http
 
-		).formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
+				.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(authorize -> authorize.requestMatchers(HttpMethod.GET, "/api/product-service/welcome")
+						.permitAll().anyRequest().authenticated()
+
+				).formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+				.exceptionHandling(
+						exceptionHandling -> exceptionHandling.accessDeniedHandler(new UserForbiddenErrorHandler()))
 
 				.exceptionHandling(ex -> ex.authenticationEntryPoint(userAuthenticationErrorHandler())
 						.accessDeniedHandler(new UserForbiddenErrorHandler()));

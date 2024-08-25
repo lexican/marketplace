@@ -21,10 +21,20 @@ public class ProductService implements IProductService {
 
 		return (List<Product>) productRepository.findAll();
 	}
-	
+
 	@Override
-	public Optional<Product> getProductById(Long productId){
+	public Optional<Product> getProductById(Long productId) {
 		return productRepository.findById(productId);
+	}
+
+	@Override
+	public Optional<Product> deleteProductById(Long productId) {
+		Optional<Product> product = getProductById(productId);
+		if (product.isPresent()) {
+			productRepository.deleteById(productId);
+		}
+
+		return product;
 	}
 
 }
