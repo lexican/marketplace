@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,20 +49,60 @@ public class ProductController {
 		Optional<Category> category = categoryService
 				.getCategoryById(Long.valueOf(createProductRequest.getCategoryId()));
 
+		// check if category exists
 		if (category.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(ApiResponse.builder().success(false).data(null).message("Category does not exist").build());
 		}
 
 		Product product = Product.builder().name(createProductRequest.getName())
-				.description(createProductRequest.getDescription()).quantity(createProductRequest.getQuantity())
-				.price(createProductRequest.getPrice()).productDiscount(createProductRequest.getDiscount())
-				.sku(createProductRequest.getSku()).category(category.get()).build();
-		
+				.description(createProductRequest.getDescription()).imageUrl(createProductRequest.getImageUrl())
+				.quantity(createProductRequest.getQuantity()).price(createProductRequest.getPrice())
+				.discount(createProductRequest.getDiscount()).sku(createProductRequest.getSku())
+				.category(category.get()).build();
+
 		Product newProduct = productService.createProduct(product);
 
-		return ResponseEntity
-				.ok(ApiResponse.builder().success(true).data(newProduct).message("Product created successfully").build());
+		return ResponseEntity.ok(
+				ApiResponse.builder().success(true).data(newProduct).message("Product created successfully").build());
+	}
+
+	// Creates a new product
+	@PatchMapping("/products/{id}")
+	public ResponseEntity<ApiResponse<Object>> updateProduct(@PathVariable("id") @Positive Long productId,
+			@Valid @RequestBody CreateProductRequest createProductRequest) {
+
+		// check if product exists
+		Optional<Product> product = productService.getProductById(productId);
+
+		if (product.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(ApiResponse.builder().success(false).data(null).message("Product does not exist").build());
+		}
+
+		// check if category exists
+		Optional<Category> category = categoryService
+				.getCategoryById(Long.valueOf(createProductRequest.getCategoryId()));
+
+		if (category.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(ApiResponse.builder().success(false).data(null).message("Category does not exist").build());
+		}
+
+		Product tempProduct = product.get();
+		tempProduct.setName(createProductRequest.getName());
+		tempProduct.setDescription(createProductRequest.getDescription());
+		tempProduct.setImageUrl(createProductRequest.getImageUrl());
+		tempProduct.setQuantity(createProductRequest.getQuantity());
+		tempProduct.setPrice(createProductRequest.getPrice());
+		tempProduct.setDiscount(createProductRequest.getDiscount());
+		tempProduct.setSku(createProductRequest.getSku());
+		tempProduct.setCategory(category.get());
+
+		Product updatedProduct = productService.updateProduct(tempProduct);
+
+		return ResponseEntity.ok(ApiResponse.builder().success(true).data(updatedProduct)
+				.message("Product updated successfully").build());
 	}
 
 	// Returns a single product by Id

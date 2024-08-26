@@ -13,4 +13,6 @@ public interface IProductService {
 	Optional<Product> deleteProductById(Long productId);
 
 	Product createProduct(Product product);
+	
+	Product updateProduct(Product product);
 }

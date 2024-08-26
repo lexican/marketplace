@@ -34,16 +34,17 @@ public class Product implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
 	private Long id;
-	
+
 	private String name;
 	private String description;
 	private double price;
 	private int quantity;
 	private String sku;
-	
+	private String imageUrl;
+
 	@Builder.Default
-	private double productDiscount = 0;
-	
+	private double discount = 0;
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
