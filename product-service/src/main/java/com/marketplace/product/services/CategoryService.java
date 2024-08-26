@@ -1,6 +1,7 @@
 package com.marketplace.product.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,12 @@ public class CategoryService implements ICategoryService {
 	public List<Category> getCategories() {
 
 		return (List<Category>) categoryRepository.findAll();
+	}
+
+	@Override
+	public Optional<Category> getCategoryById(Long categoryId) {
+		
+		return categoryRepository.findById(categoryId);
 	}
 
 }

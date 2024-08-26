@@ -1,6 +1,7 @@
 package com.marketplace.product.payload.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -15,13 +16,14 @@ import lombok.Setter;
 public class CreateProductRequest {
 	@NotBlank
 	private String name;
-	@NotBlank
+	@Positive
 	private Double price;
-	@NotBlank
+	@Positive
 	private int quantity;
-	@NotBlank
-	private int category_id;
+	@Positive
+	private int categoryId;
 	private String description;
 	private String sku;
+	private double discount;
 
 }
