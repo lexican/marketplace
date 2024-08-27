@@ -26,7 +26,7 @@ public class SecurityConfiguration {
 	private final AuthenticationProvider authenticationProvider;
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/auth-service/login").permitAll()
 						.requestMatchers("/api/auth-service/register").permitAll()
@@ -43,7 +43,7 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	public AuthenticationEntryPoint userAuthenticationErrorHandler() {
+	AuthenticationEntryPoint userAuthenticationErrorHandler() {
 		UserAuthenticationErrorHandler userAuthenticationErrorHandler = new UserAuthenticationErrorHandler();
 		userAuthenticationErrorHandler.setRealmName("Basic Authentication");
 		return userAuthenticationErrorHandler;
