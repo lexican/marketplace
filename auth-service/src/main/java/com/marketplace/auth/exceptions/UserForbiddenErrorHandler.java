@@ -28,7 +28,7 @@ public class UserForbiddenErrorHandler implements AccessDeniedHandler {
 		response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
 		Map<String, Object> data = new HashMap<>();
-		data.put("status", "Failure");
+		data.put("status", false);
 		data.put("timestamp", Calendar.getInstance().getTime());
 		data.put("exception", ex.getMessage());
 

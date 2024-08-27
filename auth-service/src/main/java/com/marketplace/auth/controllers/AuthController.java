@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.marketplace.auth.config.JwtService;
-import com.marketplace.auth.exceptions.ObjectNotFoundException;
+import com.marketplace.auth.exceptions.CustomException;
 import com.marketplace.auth.models.ERole;
 import com.marketplace.auth.models.Role;
 import com.marketplace.auth.models.User;
 import com.marketplace.auth.payload.request.SigninRequest;
 import com.marketplace.auth.payload.request.SignupRequest;
+import com.marketplace.auth.payload.response.ApiResponse;
 import com.marketplace.auth.payload.response.AuthenticationResponse;
-import com.marketplace.auth.payload.response.MessageResponse;
 import com.marketplace.auth.payload.response.VerifyTokenResponse;
 import com.marketplace.auth.services.RoleService;
 import com.marketplace.auth.services.UserService;
@@ -39,7 +39,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth-service")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -59,11 +59,14 @@ public class AuthController {
 	public ResponseEntity<Object> register(@Valid @RequestBody SignupRequest signUpRequest) {
 
 		if (userService.existsByUsername(signUpRequest.getUsername())) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+
+			return ResponseEntity.badRequest().body(
+					ApiResponse.builder().success(false).data(null).message("Username is already taken!").build());
 		}
 
 		if (userService.existsByEmail(signUpRequest.getEmail())) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+			return ResponseEntity.badRequest()
+					.body(ApiResponse.builder().success(false).data(null).message("Email is already taken!").build());
 		}
 
 		User user = User.builder().username(signUpRequest.getUsername()).email(signUpRequest.getEmail())
@@ -74,17 +77,17 @@ public class AuthController {
 
 		if (strRoles == null) {
 			Role userRole = roleService.findByName(ERole.ROLE_USER)
-					.orElseThrow(() -> new ObjectNotFoundException("Error: Role is not found."));
+					.orElseThrow(() -> new CustomException("Role is not found."));
 			roles.add(userRole);
 		} else {
 			strRoles.forEach(role -> {
 				if (role == "admin") {
 					Role adminRole = roleService.findByName(ERole.ROLE_ADMIN)
-							.orElseThrow(() -> new ObjectNotFoundException("Error: Role is not found."));
+							.orElseThrow(() -> new CustomException("Role is not found."));
 					roles.add(adminRole);
 				} else {
 					Role userRole = roleService.findByName(ERole.ROLE_USER)
-							.orElseThrow(() -> new ObjectNotFoundException("Error: Role is not found."));
+							.orElseThrow(() -> new CustomException("Role is not found."));
 					roles.add(userRole);
 				}
 
@@ -97,22 +100,25 @@ public class AuthController {
 
 		var jwtToken = jwtService.generateToken(new HashMap<>(), savedUser);
 
-		return ResponseEntity.ok(new AuthenticationResponse("User registered successfully!", jwtToken));
+		return ResponseEntity
+				.ok(ApiResponse.builder().success(true).data(AuthenticationResponse.builder().token(jwtToken).build())
+						.message("User registered successfully").build());
 	}
 
 	@PostMapping("/login")
 	@Transactional
-	public ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody SigninRequest signinrequest) {
+	public ResponseEntity<Object> authenticate(@Valid @RequestBody SigninRequest signinrequest) {
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(signinrequest.getEmail(), signinrequest.getPassword()));
 		var user = userService.findByEmail(signinrequest.getEmail()).orElseThrow();
 		var jwtToken = jwtService.generateToken(new HashMap<>(), user);
-		return ResponseEntity
-				.ok(AuthenticationResponse.builder().token(jwtToken).message("Login successfully!").build());
+
+		return ResponseEntity.ok(ApiResponse.builder().success(true)
+				.data(AuthenticationResponse.builder().token(jwtToken).build()).message("Login successfully").build());
 	}
 
 	@GetMapping("/validate")
-	public ResponseEntity<VerifyTokenResponse> verifyToken(@RequestParam("token") String token) {
+	public ResponseEntity<Object> verifyToken(@RequestParam("token") String token) {
 
 		final String userEmail = jwtService.extractUsername(token);
 
@@ -127,27 +133,29 @@ public class AuthController {
 
 			if (jwtService.isTokenValid(token, userDetails)) {
 
-				return ResponseEntity
-						.ok(VerifyTokenResponse.builder().message("Valid Token").email(userEmail).roles(roles).build());
+				return ResponseEntity.ok(ApiResponse.builder().success(true).message("Valid Token")
+						.data(VerifyTokenResponse.builder().email(userEmail).roles(roles).build()).build());
 			}
 
 		}
 		return ResponseEntity.badRequest()
-				.body(VerifyTokenResponse.builder().message("Invalid Token").email("").build());
+				.body(ApiResponse.builder().success(false).data(null).message("Invalid Token").build());
 	}
 
 	@GetMapping(value = "/users")
-	public ResponseEntity<List<User>> getAllUsers() {
-		return ResponseEntity.ok(userService.getAllUsers());
+	public ResponseEntity<Object> getAllUsers() {
+		return ResponseEntity.ok(ApiResponse.builder().success(true).data(userService.getAllUsers())
+				.message("Users fetched successfully").build());
 	}
 
 	@GetMapping(value = "/user/{id}")
 	public ResponseEntity<Object> getUserById(@PathVariable("id") Long id) {
 		Optional<User> user = userService.findById(id);
 		if (user.isPresent()) {
-			return ResponseEntity.ok(user);
+			return ResponseEntity.ok(ApiResponse.builder().success(true).data(user).build());
 		}
-		return ResponseEntity.badRequest().body(new MessageResponse("User does not exist"));
+		return ResponseEntity.badRequest()
+				.body(ApiResponse.builder().success(false).data(null).message("User does not exist").build());
 	}
 
 }

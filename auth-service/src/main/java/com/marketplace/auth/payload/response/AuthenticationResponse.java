@@ -14,6 +14,5 @@ import lombok.Setter;
 @Data
 @Builder
 public class AuthenticationResponse {
-	private String message;
 	private String token;
 }

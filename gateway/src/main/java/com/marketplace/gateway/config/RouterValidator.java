@@ -6,17 +6,13 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.function.Predicate;
 
-
 @Component
 public class RouterValidator {
 
-    public static final List<String> openApiEndpoints = List.of(
-            "/api/product-service/welcome", "/api/auth/login", "/api/auth/register", "/api/auth/validate"
-    );
+	public static final List<String> openApiEndpoints = List.of("/api/product-service/welcome",
+			"/api/auth-service/login", "/api/auth-service/register", "/api/auth-service/validate");
 
-    public Predicate<ServerHttpRequest> isSecured =
-            request -> openApiEndpoints
-                    .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+	public Predicate<ServerHttpRequest> isSecured = request -> openApiEndpoints.stream()
+			.noneMatch(uri -> request.getURI().getPath().contains(uri));
 
 }

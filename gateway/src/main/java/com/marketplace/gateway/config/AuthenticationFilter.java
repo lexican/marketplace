@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marketplace.gateway.payload.response.VerifyTokenResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,8 @@ public class AuthenticationFilter implements GatewayFilter {
 
 	private final RouterValidator routerValidator;
 	private final RestTemplate restTemplate;
-	
+	private ObjectMapper objectMapper = new ObjectMapper();;
+
 	@Value("${app.auth.url}")
 	private String authUrl;
 
@@ -31,9 +35,9 @@ public class AuthenticationFilter implements GatewayFilter {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		ServerHttpRequest request = exchange.getRequest();
 
-
 		if (routerValidator.isSecured.test(request)) {
-			System.out.println("Filter ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Authorization not available");
+//			System.out.println(
+//					"Filter ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Authorization not available");
 			if (this.isAuthMissing(request)) {
 				return this.onError(exchange, HttpStatus.UNAUTHORIZED);
 			}
@@ -45,13 +49,19 @@ public class AuthenticationFilter implements GatewayFilter {
 
 			String token = authHeader.substring(7);
 
+			ResponseEntity<String> response = restTemplate.getForEntity(authUrl + token, String.class);
 
-			ResponseEntity<VerifyTokenResponse> verifyTokenResponse = restTemplate
-					.getForEntity(authUrl + token, VerifyTokenResponse.class);
-			VerifyTokenResponse verifyToken = verifyTokenResponse.getBody();
+			String body = response.getBody();
 
-			exchange.getRequest().mutate().header("email", verifyToken.getEmail())
-					.header("roles", String.join(",", verifyToken.getRoles())).build();
+			VerifyTokenResponse verifyTokenResponse = VerifyTokenResponse.builder().build();
+			try {
+				verifyTokenResponse = objectMapper.readValue(body, new TypeReference<VerifyTokenResponse>() {
+				});
+				exchange.getRequest().mutate().header("email", verifyTokenResponse.getData().getEmail())
+						.header("roles", String.join(",", verifyTokenResponse.getData().getRoles())).build();
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
 
 		}
 

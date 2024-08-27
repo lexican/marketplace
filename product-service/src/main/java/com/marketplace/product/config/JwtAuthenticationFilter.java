@@ -25,6 +25,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marketplace.product.exceptions.CustomException;
 import com.marketplace.product.payload.response.VerifyTokenResponse;
@@ -41,6 +43,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 	private final RestTemplate restTemplate;
+	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Value("${app.auth.url}")
 	private String authUrl;
@@ -86,17 +89,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 				try {
 
-					ResponseEntity<VerifyTokenResponse> verifyTokenResponse = restTemplate.getForEntity(authUrl + jwt,
-							VerifyTokenResponse.class);
-					VerifyTokenResponse verifyToken = verifyTokenResponse.getBody();
+					ResponseEntity<String> restResponse = restTemplate.getForEntity(authUrl + jwt, String.class);
 
-					System.out.println("verifyTokenResponse : " + verifyTokenResponse.toString());
+					String body = restResponse.getBody();
 
-					setSecurityContext(verifyToken.getEmail(), verifyToken.getRoles(), request);
+					VerifyTokenResponse verifyTokenResponse = VerifyTokenResponse.builder().build();
+					try {
+						verifyTokenResponse = objectMapper.readValue(body, new TypeReference<VerifyTokenResponse>() {
+						});
+						setSecurityContext(verifyTokenResponse.getData().getEmail(),
+								verifyTokenResponse.getData().getRoles(), request);
+						System.out.println("verifyTokenResponse : " + verifyTokenResponse.toString());
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
 
 				} catch (Exception e) {
 
-					ObjectMapper objectMapper = new ObjectMapper();
 					final PrintWriter writer = response.getWriter();
 
 					response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());

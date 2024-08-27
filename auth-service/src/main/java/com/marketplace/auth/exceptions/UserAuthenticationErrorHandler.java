@@ -33,7 +33,7 @@ public class UserAuthenticationErrorHandler extends BasicAuthenticationEntryPoin
 		response.setCharacterEncoding("UTF-8");
 
 		Map<String, Object> data = new HashMap<>();
-		data.put("status", "Failure");
+		data.put("status", false);
 		data.put("timestamp", Calendar.getInstance().getTime());
 		data.put("exception", ex.getMessage());
 

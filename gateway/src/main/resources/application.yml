@@ -9,7 +9,7 @@ spring:
         - id: auth-service
           uri: 'lb://AUTH-SERVICE'
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth-service/**
         - id: product-service
           uri: 'lb://PRODUCT-SERVICE'
           predicates:
@@ -25,4 +25,4 @@ spring:
 app:
   auth:
     url:
-      'http://localhost:8082/api/auth/validate?token='
+      'http://localhost:8082/api/auth-service/validate?token='

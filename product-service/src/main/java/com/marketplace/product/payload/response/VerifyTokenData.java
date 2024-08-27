@@ -1,4 +1,4 @@
-package com.marketplace.auth.payload.response;
+package com.marketplace.product.payload.response;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Data
 @Builder
-public class VerifyTokenResponse {
+public class VerifyTokenData {
 	private String email;
 	private List<String> roles;
 }
